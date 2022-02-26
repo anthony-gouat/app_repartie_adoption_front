@@ -1,13 +1,16 @@
 <template>
   <div>
-    home
-    <v-btn @click="$router.push({name:'Login'})">login</v-btn>
+    <navigation></navigation>
+    <carousel></carousel>
   </div>
 </template>
 
 <script>
+import Navigation from "@/components/Navigation";
+import Carousel from "@/components/carousel";
 export default {
-  name: "Home"
+  name: "Home",
+  components: {Carousel, Navigation}
 }
 </script>
 
