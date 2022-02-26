@@ -1,5 +1,8 @@
 <template>
-
+  <div>
+    home
+    <v-btn @click="$router.push({name:'Login'})">login</v-btn>
+  </div>
 </template>
 
 <script>
