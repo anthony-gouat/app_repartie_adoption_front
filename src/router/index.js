@@ -9,8 +9,21 @@ Vue.use(VueRouter)
 const routes = [
     {
         path: '/',
-        name: 'Home',
+        name: 'Nav',
         component: () => import('../views/Home.vue'),
+        children:[
+            {
+                path: '/',
+                name: 'Carousel',
+                component: () => import('../components/carousel.vue'),
+            },
+            {
+                path: '/animal/:id',
+                name: 'Animal',
+                component: () => import('../views/Animal.vue'),
+                props: route =>({id:route.params.id}),
+            }
+        ]
         // meta: {
         //     requiresAuth: true
         // },

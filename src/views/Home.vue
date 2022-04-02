@@ -1,16 +1,19 @@
 <template>
   <div>
     <navigation></navigation>
-    <carousel></carousel>
+<!--    <carousel></carousel>-->
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
 import Navigation from "@/components/Navigation";
-import Carousel from "@/components/carousel";
+// import Carousel from "@/components/carousel";
 export default {
   name: "Home",
-  components: {Carousel, Navigation}
+  components: {
+    // Carousel,
+    Navigation}
 }
 </script>
 

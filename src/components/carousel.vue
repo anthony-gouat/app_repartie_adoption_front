@@ -7,7 +7,7 @@
           class="d-flex child-flex"
           cols="4"
       >
-        <v-card>
+        <v-card @click="$router.push({name:'Animal',params:{id:animal.id}})">
           <v-img
               :src="animal.image"
               aspect-ratio="1"
@@ -25,9 +25,22 @@
                 ></v-progress-circular>
               </v-row>
             </template>
-            <v-icon color="red" v-if="animal.adopte">mdi-close</v-icon>
+            <v-img v-if="animal.adopte" :src="svgadopte" width="30%"></v-img>
           </v-img>
-          {{animal.nom}} {{animal.age}} {{animal.age>1?'ans':'an'}}
+          <v-col style="margin: 0;padding:10px">
+            <v-row style="margin: 0;padding:0">
+              Animal : {{animal.type}}
+            </v-row>
+            <v-row style="margin: 0;padding:0">
+              Nom : {{animal.nom}}
+            </v-row>
+            <v-row style="margin: 0;padding:0">
+              Age : {{animal.age}} {{animal.age>1?'ans':'an'}}
+            </v-row>
+            <v-row style="margin: 0;padding:0">
+              Race : {{animal.race}}
+            </v-row>
+          </v-col>
         </v-card>
 
       </v-col>
@@ -36,12 +49,15 @@
 </template>
 
 <script>
+import * as svgadopte from '../assets/Adopté_Plan de travail 1.svg';
 export default {
   name: "carousel",
   data(){
     return{
+      svgadopte:svgadopte,
       animaux:[
         {
+          id:1,
           nom:'chien1',
           age:1,
           race:'chepa',
@@ -51,6 +67,7 @@ export default {
           adopte:false
         },
         {
+          id:2,
           nom:'chat2',
           age:5,
           race:'chepa',
@@ -60,6 +77,7 @@ export default {
           adopte:true
         },
         {
+          id:3,
           nom:'chien3',
           age:10,
           race:'chepa',
@@ -69,6 +87,7 @@ export default {
           adopte:false
         },
         {
+          id:4,
           nom:'chien4',
           age:10,
           race:'chepa',
@@ -78,6 +97,7 @@ export default {
           adopte:false
         },
         {
+          id:5,
           nom:'chien5',
           age:12,
           race:'chepa',

@@ -102,9 +102,9 @@
       </v-col>
       <v-col class="col-1">
         <v-row>
-          <v-btn fab elevation="0" @click="$router.push({name:'Login'})">
+          <v-btn fab elevation="0" @click="(utilisateur===undefined)? ($router.push({name:'Login'})) : setUtilisateur(undefined)">
             <v-icon>
-              mdi-account-outline
+              {{(utilisateur===undefined)?'mdi-account-outline':'mdi-power'}}
             </v-icon>
           </v-btn>
         </v-row>
@@ -114,6 +114,8 @@
 </template>
 
 <script>
+import {mapGetters, mapMutations} from "vuex";
+
 export default {
   name: "Navigation",
   data(){
@@ -126,7 +128,14 @@ export default {
         {nom:'âge',checked:false},
       ],
       tags:[],
+      utilisateur:this.getUtilisateur
     }
+  },
+  computed:{
+    ...mapGetters(['getUtilisateur']),
+  },
+  methods: {
+    ...mapMutations(['setUtilisateur']),
   }
 }
 </script>
