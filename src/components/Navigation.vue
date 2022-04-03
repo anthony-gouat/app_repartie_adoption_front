@@ -102,9 +102,9 @@
       </v-col>
       <v-col class="col-1">
         <v-row>
-          <v-btn fab elevation="0" @click="(utilisateur===undefined)? ($router.push({name:'Login'})) : setUtilisateur(undefined)">
+          <v-btn fab elevation="0" @click="(getUtilisateur===undefined)? ($router.push({name:'Login'})) : setUtilisateur(undefined)">
             <v-icon>
-              {{(utilisateur===undefined)?'mdi-account-outline':'mdi-power'}}
+              {{(getUtilisateur===undefined)?'mdi-account-outline':'mdi-power'}}
             </v-icon>
           </v-btn>
         </v-row>
@@ -128,7 +128,6 @@ export default {
         {nom:'âge',checked:false},
       ],
       tags:[],
-      utilisateur:this.getUtilisateur
     }
   },
   computed:{
