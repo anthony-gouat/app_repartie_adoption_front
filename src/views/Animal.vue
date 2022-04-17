@@ -2,17 +2,37 @@
 <div>
   <v-row style="margin: 0;margin-top: 50px" justify="center">
     <v-card width="95%">
-      <v-btn v-if="getUtilisateur && getUtilisateur.role==='admin'" elevation="0" color="transparent" style="position:absolute;top:0;right:0;" @click="editMode=!editMode" >
-        <v-icon color="green lighten-2" size="30">
-          {{editMode?'mdi-close':'mdi-pen'}}
-        </v-icon>
-      </v-btn>
 
       <v-row>
-
         <v-col>
-          <v-img
-              :src="animalCopy.image"
+          <v-carousel v-if="animalCopy.images.length>1" v-model="indexCarousel">
+            <v-carousel-item
+                v-for="(image, i) in animalCopy.images"
+                :key="i"
+            >
+              <v-img
+                  :src="image"
+                  class="grey lighten-2"
+              >
+                <template v-slot:placeholder>
+                  <v-row
+                      class="fill-height ma-0"
+                      align="center"
+                      justify="center"
+                      style="margin: 0"
+                  >
+                    <v-progress-circular
+                        indeterminate
+                        color="grey lighten-5"
+                    ></v-progress-circular>
+                  </v-row>
+                </template>
+                <v-img v-if="animalCopy.adopte" :src="svgadopte" width="30%"></v-img>
+              </v-img>
+            </v-carousel-item>
+          </v-carousel>
+          <v-img v-else
+              :src="animalCopy.images[0]"
               class="grey lighten-2"
           >
             <template v-slot:placeholder>
@@ -33,6 +53,11 @@
         </v-col>
 
         <v-col style="margin: 0;padding:10px;font-size: 25px">
+          <v-btn v-if="getUtilisateur && getUtilisateur.role==='admin'" elevation="0" color="transparent" style="position:relative;top:0;right:0;" @click="cancel()" >
+            <v-icon color="green lighten-2" size="30">
+              {{editMode?'mdi-close':'mdi-pen'}}
+            </v-icon>
+          </v-btn>
           <div>
             <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
               Animal :
@@ -40,7 +65,7 @@
             <v-row style="margin: 0;padding:0;" v-if="!editMode" justify="center">
               {{animal.type}}
             </v-row>
-            <v-row v-else style="margin: auto;padding:0;width: 25%">
+            <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-combobox
                 v-model="animalCopy.type"
                 :items="types"
@@ -56,10 +81,10 @@
             <v-row style="margin: 0;padding:0;" v-if="!editMode" justify="center">
               {{animal.nom}}
             </v-row>
-            <v-row v-else style="margin: auto;padding:0;width: 25%">
+            <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-text-field
                   v-model="animalCopy.nom"
-                  :error-messages="(new RegExp(/^[a-zA-Z\-]+$/).test(animalCopy.nom))?'':'Veuillez choisir un nom pour l\'animal'"
+                  :error-messages="(new RegExp(/^[a-zA-Z\-0-9]+$/).test(animalCopy.nom))?'':'Veuillez choisir un nom pour l\'animal'"
               >
               </v-text-field>
             </v-row>
@@ -71,7 +96,7 @@
             <v-row style="margin: 0;padding:0;" v-if="!editMode" justify="center">
               {{animal.age}} {{animal.age>1?'ans':'an'}}
             </v-row>
-            <v-row v-else style="margin: auto;padding:0;width: 25%">
+            <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-text-field
                   v-model="animalCopy.age"
                   :error-messages="(new RegExp(/^[0-9]+$/).test(animalCopy.age))?'':'Doit être un nombre'"
@@ -85,13 +110,14 @@
             <v-row style="margin: 0;padding:0;" v-if="!editMode" justify="center">
               {{animal.race}}
             </v-row>
-            <v-row v-else style="margin: auto;padding:0;width: 25%">
+            <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-text-field
                   v-model="animalCopy.race"
                   :error-messages="(new RegExp(/^[a-zA-Z\-]+$/).test(animalCopy.race))?'':'Veuillez choisir une race pour l\'animal'"
               ></v-text-field>
             </v-row>
           </div>
+
           <div>
             <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
               {{ animal.couleur.length>1?'Couleurs':'Couleur'}} :
@@ -99,7 +125,7 @@
             <v-row style="margin: 0;padding:0;" v-if="!editMode" justify="center">
               {{ getCouleursAnimal() }}
             </v-row>
-            <v-row v-else style="margin: auto;padding:0;width: 25%">
+            <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-combobox
                   v-model="animalCopy.couleur"
                   :items="couleurs"
@@ -108,6 +134,24 @@
               ></v-combobox>
             </v-row>
           </div>
+
+          <div v-if="editMode">
+            <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
+              Image :
+            </v-row>
+            <v-row  style="margin: auto;padding:0;width: 50%;min-width: 100px">
+<!--              <v-text-field-->
+<!--                  v-model="animalCopy.image"-->
+<!--                  :error-messages="(animalCopy.image.length>0)?'':'Veuillez choisir une image pour l\'animal (pas obligatoire)'"-->
+<!--              ></v-text-field>-->
+              <v-combobox
+                  v-model="animalCopy.images"
+                  multiple
+                  chips
+              ></v-combobox>
+            </v-row>
+          </div>
+
           <div v-if="editMode">
             <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
               Adopté :
@@ -120,7 +164,7 @@
             </v-row>
           </div>
           <div v-if="editMode">
-            <v-row justify="center">
+            <v-row justify="center" style="margin: 0;padding:0;margin-bottom: 10px">
               <v-btn color="green lighten-2" @click="editMode=false;enregistrer()">
                 enregistrer
               </v-btn>
@@ -144,6 +188,7 @@ export default {
   props:['id'],
   data(){
     return{
+      indexCarousel:0,
       editMode:false,
       svgadopte:svgadopte,
       types:[
@@ -168,7 +213,10 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['vert','gris'],
-          image:'https://picsum.photos/500/300?image=18',
+          images:[
+            'https://picsum.photos/500/300?image=18',
+            'https://picsum.photos/500/300?image=15'
+          ],
           adopte:false
         },
         {
@@ -178,7 +226,7 @@ export default {
           race:'chepa',
           type:'chat',
           couleur:['gris'],
-          image:'https://picsum.photos/500/300?image=15',
+          images:['https://picsum.photos/500/300?image=15'],
           adopte:true
         },
         {
@@ -188,7 +236,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['bleu','gris'],
-          image:'https://picsum.photos/500/300?image=43',
+          images:['https://picsum.photos/500/300?image=43'],
           adopte:false
         },
         {
@@ -198,7 +246,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['brun'],
-          image:'https://picsum.photos/500/300?image=78',
+          images:['https://picsum.photos/500/300?image=78'],
           adopte:false
         },
         {
@@ -208,7 +256,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['brun','gris'],
-          image:'https://picsum.photos/500/300?image=105',
+          images:['https://picsum.photos/500/300?image=105'],
           adopte:false
         }
       ],
@@ -233,13 +281,17 @@ export default {
       return couleurs.slice(0, -2);
     },
     enregistrer:function(){
-      if(this.animalCopy.type.length>0 && this.animalCopy.nom.length>0 && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)) && this.animalCopy.race.length>0 && this.animalCopy.couleur.length>0){
+      if(this.animalCopy.type.length>0 && this.animalCopy.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+$/).test(this.animalCopy.nom)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)) && this.animalCopy.race.length>0 && (new RegExp(/^[a-zA-Z-]+$/).test(this.animalCopy.race)) && this.animalCopy.couleur.length>0){
         this.animal = Object.assign({}, this.animalCopy);
         //TODO
         // Enregistrer dans la bdd
       }else{
         this.animalCopy = Object.assign({}, this.animal);
       }
+    },
+    cancel:function(){
+      this.editMode=!this.editMode;
+      this.animalCopy = Object.assign({}, this.animal);
     }
   },
   computed:{

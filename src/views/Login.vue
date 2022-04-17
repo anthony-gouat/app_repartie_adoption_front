@@ -6,7 +6,7 @@
       <v-container style="padding-bottom: 0px !important;">
         <v-col cols="auto" sm="6"  style="margin:auto !important;width: 400px;padding-bottom: 0px !important;">
           <v-row justify="center" style="display: grid;">
-            <h1 style="text-align: center">Éspace de connexion</h1>
+            <h1 style="text-align: center">Espace de connexion</h1>
           </v-row>
 
           <v-row justify="center">
@@ -94,7 +94,7 @@ export default {
           .then(function (response) {
             if(response.status===200){ // si il n'y a pas d'erreur
               v.setUtilisateur(response.data) // on initialise l'utilisateur
-              router.push({name:''}) // on va sur la page
+              router.push({name:'Carousel'}) // on va sur la page
             }
           }).catch(function(error) { // si il y a une erreur
         console.log(error)
