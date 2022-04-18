@@ -45,11 +45,18 @@
 
       </v-col>
     </v-row>
+    <v-btn v-if="getUtilisateur && getUtilisateur.role==='admin'" fab  style="position: fixed;right: 25px;bottom: 25px;" @click="$router.push({name:'Ajout'})">
+      <v-icon large color="green lighten-2">
+        mdi-plus
+      </v-icon>
+    </v-btn>
+
   </div>
 </template>
 
 <script>
 import * as svgadopte from '../assets/Adopté_Plan de travail 1.svg';
+import {mapGetters} from "vuex";
 export default {
   name: "carousel",
   data(){
@@ -109,7 +116,10 @@ export default {
 
       ]
     }
-  }
+  },
+  computed:{
+    ...mapGetters(['getUtilisateur']),
+  },
 }
 </script>
 

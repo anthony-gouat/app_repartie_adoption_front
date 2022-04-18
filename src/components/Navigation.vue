@@ -6,7 +6,18 @@
           <v-col  >
             <v-app-bar-title>
               <template v-slot:default>
-                Association d'aide à l'adoption
+                <v-row style="margin: 0;padding: 0">
+                  <v-col>
+                    <v-icon large @click="$router.push({name:'Carousel'})" color="green lighten-2">
+                      mdi-home
+                    </v-icon>
+                  </v-col>
+                  <v-col>
+                    <h3>
+                      Association d'aide à l'adoption
+                    </h3>
+                  </v-col>
+                </v-row>
               </template>
             </v-app-bar-title>
           </v-col>
@@ -20,7 +31,8 @@
                 id="input_recherche"
                 v-model="recherche"
                 hide-details="auto"
-                prepend-inner-icon="mdi-magnify"
+                append-outer-icon="mdi-magnify"
+                @click:append-outer="search()"
                 clearable
             >
             </v-text-field>
@@ -135,6 +147,11 @@ export default {
   },
   methods: {
     ...mapMutations(['setUtilisateur']),
+    search:function(){
+      console.log(this.recherche)
+      // TODO
+      // fonction de recherche
+    }
   }
 }
 </script>

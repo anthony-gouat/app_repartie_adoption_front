@@ -130,7 +130,7 @@
                   v-model="animalCopy.couleur"
                   :items="couleurs"
                   multiple
-                  :error-messages="(animalCopy.couleur.length>0)?'':'Veuillez choisir une race pour l\'animal'"
+                  :error-messages="(animalCopy.couleur.length>0)?'':'Veuillez choisir une/des couleur(s) pour l\'animal'"
               ></v-combobox>
             </v-row>
           </div>
@@ -176,6 +176,141 @@
     </v-card>
   </v-row>
 
+
+  <v-row v-for="(comm,i) in commentaires" :key="i" style="margin: 0;margin-top: 50px;margin-left: 2.5%">
+    <v-col style="margin: 0;padding: 0">
+      <v-row style="margin: 0;padding: 0">
+        <v-card width="47.5%">
+          <v-card-title>
+            {{comm.id_util}}
+          </v-card-title>
+          <v-card-text>
+            {{comm.contenu}}
+          </v-card-text>
+          <v-card-actions v-if="getUtilisateur && getUtilisateur.role==='admin'" style="position: inherit;width: fit-content;margin-left: auto;">
+            <v-btn elevation="0" @click="deleteComm(comm.id)">
+              <v-icon color="green lighten-2" >
+                mdi-close
+              </v-icon>
+            </v-btn>
+              <v-dialog v-if="!comm.reponse"
+                  v-model="comm.ecritRep"
+                  persistent
+                  max-width="650"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn elevation="0"
+                         style="margin-left: 10px"
+                         v-bind="attrs"
+                         v-on="on"
+                  >
+                    <v-icon color="green lighten-2">
+                      mdi-message-text
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <v-card>
+                  <v-card-title class="text-h5">
+                    écrire une réponse {{comm.id}}
+                  </v-card-title>
+                  <v-card-text>
+                    <v-textarea
+                        v-model="reponse"
+                    >
+
+                    </v-textarea>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="green darken-1"
+                        text
+                        @click="comm.ecritRep = false;reponse=''"
+                    >
+                      Annuler
+                    </v-btn>
+                    <v-btn
+                        color="green darken-1"
+                        text
+                        @click="addRep(comm.id);reponse='';comm.ecritRep = false;"
+                    >
+                      Ok
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+          </v-card-actions>
+        </v-card>
+
+      </v-row>
+      <v-row v-if="comm.reponse" style="margin: 0;margin-right: 2.5%;margin-left: 50%">
+        <v-card width="100%">
+          <v-card-title>
+            {{comm.reponse.id_util}}
+          </v-card-title>
+          <v-card-text>
+            {{comm.reponse.contenu}}
+          </v-card-text>
+          <v-card-actions v-if="getUtilisateur && getUtilisateur.role==='admin'" style="position: inherit;width: fit-content;margin-left: auto;">
+            <v-btn elevation="0" @click="deleteComm(comm.reponse.id)">
+              <v-icon color="green lighten-2">
+                mdi-close
+              </v-icon>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-row>
+    </v-col>
+  </v-row>
+
+
+  <v-row justify="center">
+    <v-dialog
+        v-model="ecritComm"
+        persistent
+        max-width="650"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn v-if="getUtilisateur" fab  style="position: fixed;right: 25px;bottom: 25px;"
+               v-bind="attrs"
+               v-on="on"
+        >
+          <v-icon large color="green lighten-2">
+            mdi-message-text
+          </v-icon>
+        </v-btn>
+      </template>
+      <v-card>
+        <v-card-title class="text-h5">
+          écrire un commentaire
+        </v-card-title>
+        <v-card-text>
+          <v-textarea
+            v-model="commentaire"
+          >
+
+          </v-textarea>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              color="green darken-1"
+              text
+              @click="ecritComm = false;commentaire=''"
+          >
+            Annuler
+          </v-btn>
+          <v-btn
+              color="green darken-1"
+              text
+              @click="addComm();commentaire='';ecritComm = false;"
+          >
+            Ok
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-row>
 </div>
 </template>
 
@@ -188,7 +323,10 @@ export default {
   props:['id'],
   data(){
     return{
+      ecritComm:false,
       indexCarousel:0,
+      commentaire:'',
+      reponse:'',
       editMode:false,
       svgadopte:svgadopte,
       types:[
@@ -204,6 +342,19 @@ export default {
           "brun",
           "noir",
           "blanc"
+      ],
+      commentaires:[
+        {
+          id:1,
+          id_util:2,
+          reponse:{
+            id:2,
+            id_util:1,
+            contenu:'Ma réponse',
+          },
+          contenu:'Commentaire',
+          ecritRep:false,
+        }
       ],
       animaux:[
         {
@@ -292,6 +443,52 @@ export default {
     cancel:function(){
       this.editMode=!this.editMode;
       this.animalCopy = Object.assign({}, this.animal);
+    },
+    addComm:function(){
+      let id = this.commentaires.length*2+10
+      this.commentaires.push(
+        {
+          id:id,
+          id_util:this.getUtilisateur.id,
+          reponse:null,
+          contenu:this.commentaire,
+          ecritRep:false,
+        }
+      )
+    },
+    addRep:function(idcomm){
+      this.commentaires.forEach((comm)=>{
+        if(comm.id===idcomm){
+          comm.reponse={
+            id:comm.id+1,
+            id_util:this.getUtilisateur.id,
+            contenu:this.reponse,
+          }
+        }
+      })
+    },
+    deleteComm:function(idcomm){
+      let index=-1
+      this.commentaires.forEach((comm,i)=>{
+        if(comm.id===idcomm){
+          if(comm.reponse!==null){
+            comm.reponse=null
+            // TODO
+            // delete avec api
+          }
+          index=i
+          // TODO
+          // delete avec api
+        }
+        if(comm.reponse!== null && comm.reponse.id===idcomm) {
+          // TODO
+          // delete avec api
+          comm.reponse=null
+        }
+      })
+      if(index>-1){
+        this.commentaires.splice(index, 1);
+      }
     }
   },
   computed:{

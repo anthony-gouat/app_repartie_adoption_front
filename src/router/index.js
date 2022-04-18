@@ -22,6 +22,11 @@ const routes = [
                 name: 'Animal',
                 component: () => import('../views/Animal.vue'),
                 props: route =>({id:route.params.id}),
+            },
+            {
+                path: '/ajout',
+                name: 'Ajout',
+                component: () => import('../views/Ajout.vue'),
             }
         ]
         // meta: {
