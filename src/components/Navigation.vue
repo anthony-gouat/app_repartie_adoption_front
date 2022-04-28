@@ -1,7 +1,8 @@
 <template>
   <div>
     <v-app-bar>
-      <v-col class="col-lg-3">
+      <v-col class="col-lg-3" style="height: 100%;
+    padding: 0;">
         <v-row  align="center">
           <v-col  >
             <v-app-bar-title>
@@ -114,7 +115,7 @@
       </v-col>
       <v-col class="col-1">
         <v-row>
-          <v-btn fab elevation="0" @click="(getUtilisateur===undefined)? ($router.push({name:'Login'})) : setUtilisateur(undefined)">
+          <v-btn fab elevation="0" @click="(getUtilisateur===undefined)? ($router.push({name:'Login'})) : (logout())">
             <v-icon>
               {{(getUtilisateur===undefined)?'mdi-account-outline':'mdi-power'}}
             </v-icon>
@@ -151,6 +152,10 @@ export default {
       console.log(this.recherche)
       // TODO
       // fonction de recherche
+    },
+    logout:function(){
+      this.setUtilisateur(undefined)
+      this.$router.push({name:'Carousel'})
     }
   }
 }

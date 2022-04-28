@@ -27,6 +27,9 @@ const routes = [
                 path: '/ajout',
                 name: 'Ajout',
                 component: () => import('../views/Ajout.vue'),
+                meta: {
+                     requiresAuth: true
+                },
             }
         ]
         // meta: {

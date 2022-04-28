@@ -72,7 +72,7 @@
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-text-field
                     v-model="animal.nom"
-                    :error-messages="(new RegExp(/^[a-zA-Z\-0-9]+$/).test(animal.nom))?'':'Veuillez choisir un nom pour l\'animal'"
+                    :error-messages="(new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(animal.nom))?'':'Veuillez choisir un nom pour l\'animal'"
                 >
                 </v-text-field>
               </v-row>
@@ -95,7 +95,7 @@
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-text-field
                     v-model="animal.race"
-                    :error-messages="(new RegExp(/^[a-zA-Z\-]+$/).test(animal.race))?'':'Veuillez choisir une race pour l\'animal'"
+                    :error-messages="(new RegExp(/^[a-zA-Z\-]+( [a-zA-Z\-]+)*$/).test(animal.race))?'':'Veuillez choisir une race pour l\'animal'"
                 ></v-text-field>
               </v-row>
             </div>
@@ -182,7 +182,7 @@ export default {
   },
   methods:{
     enregistrer:function(){
-      if(this.animal.type.length>0 && this.animal.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+$/).test(this.animal.nom)) && (new RegExp(/^[0-9]+$/).test(this.animal.age)) && this.animal.race.length>0 && (new RegExp(/^[a-zA-Z-]+$/).test(this.animal.race)) && this.animal.couleur.length>0){
+      if(this.animal.type.length>0 && this.animal.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animal.nom)) && (new RegExp(/^[0-9]+$/).test(this.animal.age)) && this.animal.race.length>0 && (new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(this.animal.race)) && this.animal.couleur.length>0){
         //TODO
         // Enregistrer dans la bdd
         // this.$router.push({name:'Carousel'})

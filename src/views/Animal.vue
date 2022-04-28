@@ -5,7 +5,7 @@
 
       <v-row>
         <v-col>
-          <v-carousel v-if="animalCopy.images.length>1" v-model="indexCarousel">
+          <v-carousel v-if="animalCopy.images.length>1" v-model="indexCarousel" height="auto">
             <v-carousel-item
                 v-for="(image, i) in animalCopy.images"
                 :key="i"
@@ -84,7 +84,7 @@
             <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-text-field
                   v-model="animalCopy.nom"
-                  :error-messages="(new RegExp(/^[a-zA-Z\-0-9]+$/).test(animalCopy.nom))?'':'Veuillez choisir un nom pour l\'animal'"
+                  :error-messages="(new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(animalCopy.nom))?'':'Veuillez choisir un nom pour l\'animal'"
               >
               </v-text-field>
             </v-row>
@@ -113,7 +113,7 @@
             <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
               <v-text-field
                   v-model="animalCopy.race"
-                  :error-messages="(new RegExp(/^[a-zA-Z\-]+$/).test(animalCopy.race))?'':'Veuillez choisir une race pour l\'animal'"
+                  :error-messages="(new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(animalCopy.race))?'':'Veuillez choisir une race pour l\'animal'"
               ></v-text-field>
             </v-row>
           </div>
@@ -173,6 +173,16 @@
           </div>
         </v-col>
       </v-row>
+      <v-card-actions v-if="!animal.adopte">
+        <v-row style="padding: 0;margin: 0;position: absolute;right: 10px;bottom: 10px" >
+          <v-btn color="green lighten-2" >
+            <v-icon>
+              mdi-paw
+            </v-icon>
+          </v-btn>
+        </v-row>
+
+      </v-card-actions>
     </v-card>
   </v-row>
 
@@ -187,7 +197,7 @@
           <v-card-text>
             {{comm.contenu}}
           </v-card-text>
-          <v-card-actions v-if="getUtilisateur && getUtilisateur.role==='admin'" style="position: inherit;width: fit-content;margin-left: auto;">
+          <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='admin' || getUtilisateur.id === comm.reponse.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
             <v-btn elevation="0" @click="deleteComm(comm.id)">
               <v-icon color="green lighten-2" >
                 mdi-close
@@ -251,7 +261,7 @@
           <v-card-text>
             {{comm.reponse.contenu}}
           </v-card-text>
-          <v-card-actions v-if="getUtilisateur && getUtilisateur.role==='admin'" style="position: inherit;width: fit-content;margin-left: auto;">
+          <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='admin' || getUtilisateur.id === comm.reponse.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
             <v-btn elevation="0" @click="deleteComm(comm.reponse.id)">
               <v-icon color="green lighten-2">
                 mdi-close
@@ -432,7 +442,7 @@ export default {
       return couleurs.slice(0, -2);
     },
     enregistrer:function(){
-      if(this.animalCopy.type.length>0 && this.animalCopy.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+$/).test(this.animalCopy.nom)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)) && this.animalCopy.race.length>0 && (new RegExp(/^[a-zA-Z-]+$/).test(this.animalCopy.race)) && this.animalCopy.couleur.length>0){
+      if(this.animalCopy.type.length>0 && this.animalCopy.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animalCopy.nom)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)) && this.animalCopy.race.length>0 && (new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(this.animalCopy.race)) && this.animalCopy.couleur.length>0){
         this.animal = Object.assign({}, this.animalCopy);
         //TODO
         // Enregistrer dans la bdd
