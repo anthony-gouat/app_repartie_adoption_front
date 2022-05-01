@@ -69,6 +69,7 @@ export default {
   name: "Login",
   data(){
     return{
+      topath:'Carousel',
       showLog: true, // affiche en clair le mdp
       loginError: '', // erreur de login
       loginForm: {
@@ -94,7 +95,7 @@ export default {
           .then(function (response) {
             if(response.status===200){ // si il n'y a pas d'erreur
               v.setUtilisateur(response.data) // on initialise l'utilisateur
-              router.push({name:'Carousel'}) // on va sur la page
+              router.push({name:v.topath}) // on va sur la page
             }
           }).catch(function(error) { // si il y a une erreur
         console.log(error)
@@ -104,7 +105,9 @@ export default {
   },
   created() {
     // effectue la connexion si on appuie sur entrer
-    window.addEventListener('keyup', (e) => {
+    if(this.$route.params.topath)
+      this.topath = this.$route.params.topath.name
+      window.addEventListener('keyup', (e) => {
       if (e.key === 'Enter' && this.loginForm.login!=='' && this.loginForm.mdp!=='') {
         this.login()
       }

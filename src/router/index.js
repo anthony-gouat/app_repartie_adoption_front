@@ -55,7 +55,7 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
     const requiresAuth = to.matched.some(x => x.meta.requiresAuth)
     if (requiresAuth && !store.getters.getUtilisateur) {
-        next('/login')
+        next({name:'Login',params:{topath:to}})
     } else {
         next()
     }

@@ -69,8 +69,13 @@
               <v-combobox
                 v-model="animalCopy.type"
                 :items="types"
-
+                :search-input.sync="searchType"
               >
+                <template v-slot:no-data >
+                  <v-btn width="100%" color="transparent" elevation="0" @click="ajouteType()">
+                    Ajouter le type "<strong>{{ searchType }}</strong>"
+                  </v-btn>
+                </template>
               </v-combobox>
             </v-row>
           </div>
@@ -135,15 +140,35 @@
             </v-row>
           </div>
 
+          <div>
+            <v-row v-if="animal.tag.length>0 || editMode"  style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
+              {{ animal.tag.length>1?'Tags':'Tag'}} :
+            </v-row>
+            <v-row style="margin: 0;padding:0;" v-if="!editMode && animal.tag.length>0" justify="center">
+              {{ getTagsAnimal() }}
+            </v-row>
+            <v-row v-if="editMode" style="margin: auto;padding:0;width: 25%;min-width: 100px">
+              <v-combobox
+                  v-model="animalCopy.tag"
+                  :search-input.sync="searchTag"
+                  :items="tags"
+                  multiple
+                  :error-messages="(animalCopy.tag.length>0)?'':'Veuillez choisir un/des tag(s) pour l\'animal (pas obligatoire)'"
+              >
+                <template v-slot:no-data >
+                  <v-btn width="100%" color="transparent" elevation="0" @click="ajouteTag()">
+                    Ajouter le TAG "<strong>{{ searchTag }}</strong>"
+                  </v-btn>
+                </template>
+              </v-combobox>
+            </v-row>
+          </div>
+
           <div v-if="editMode">
             <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
               Image :
             </v-row>
             <v-row  style="margin: auto;padding:0;width: 50%;min-width: 100px">
-<!--              <v-text-field-->
-<!--                  v-model="animalCopy.image"-->
-<!--                  :error-messages="(animalCopy.image.length>0)?'':'Veuillez choisir une image pour l\'animal (pas obligatoire)'"-->
-<!--              ></v-text-field>-->
               <v-combobox
                   v-model="animalCopy.images"
                   multiple
@@ -173,15 +198,62 @@
           </div>
         </v-col>
       </v-row>
+
       <v-card-actions v-if="!animal.adopte">
         <v-row style="padding: 0;margin: 0;position: absolute;right: 10px;bottom: 10px" >
-          <v-btn color="green lighten-2" >
+<!--          Adoption d'un animal                  -->
+          <v-btn color="green lighten-2" v-if="!getUtilisateur" @click="$router.push({name:'Login',params:{topath:{name:'Animal',params:{id:animal.id}}}})">
             <v-icon>
               mdi-paw
             </v-icon>
           </v-btn>
-        </v-row>
+          <v-dialog v-else
+                    v-model="dialogAdopte"
+                    persistent
+                    max-width="650"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn elevation="0"
+                     style="margin-left: 10px"
+                     v-bind="attrs"
+                     v-on="on"
+                     color="green lighten-2"
+              >
+                <v-icon>
+                  mdi-paw
+                </v-icon>
+              </v-btn>
+            </template>
+            <v-card>
+              <v-card-title class="text-h5">
+                Adopter un animal
+              </v-card-title>
+              <v-card-text>
+                <p>Vous voulez adopter un {{ animal.type }} nommé {{ animal.nom }} agée de {{ animal.age }}
+                  {{ animal.age > 1 ? 'ans' : 'an' }} le {{ dateRDV }}</p>
+                <v-date-picker locale="fr-fr" :first-day-of-week="1" v-model="dateRDV"></v-date-picker>
 
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                    color="red darken-1"
+                    text
+                    @click="dialogAdopte = false;"
+                >
+                  Annuler
+                </v-btn>
+                <v-btn
+                    color="green darken-1"
+                    text
+                    @click="dialogAdopte = false;"
+                >
+                  Valider
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-row>
       </v-card-actions>
     </v-card>
   </v-row>
@@ -197,13 +269,13 @@
           <v-card-text>
             {{comm.contenu}}
           </v-card-text>
-          <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='admin' || getUtilisateur.id === comm.reponse.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
+          <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='admin' || getUtilisateur.id === comm.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
             <v-btn elevation="0" @click="deleteComm(comm.id)">
               <v-icon color="green lighten-2" >
                 mdi-close
               </v-icon>
             </v-btn>
-              <v-dialog v-if="!comm.reponse"
+              <v-dialog v-if="!comm.reponse && getUtilisateur && getUtilisateur.role==='admin'"
                   v-model="comm.ecritRep"
                   persistent
                   max-width="650"
@@ -233,7 +305,7 @@
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn
-                        color="green darken-1"
+                        color="red darken-1"
                         text
                         @click="comm.ecritRep = false;reponse=''"
                     >
@@ -333,7 +405,11 @@ export default {
   props:['id'],
   data(){
     return{
+      searchTag:'',
+      searchType:'',
+      dateRDV:(new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10), // date du jour
       ecritComm:false,
+      dialogAdopte:false,
       indexCarousel:0,
       commentaire:'',
       reponse:'',
@@ -352,6 +428,11 @@ export default {
           "brun",
           "noir",
           "blanc"
+      ],
+      tags:[
+          'tropical',
+          'origine continental',
+          'exotique',
       ],
       commentaires:[
         {
@@ -374,6 +455,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['vert','gris'],
+          tag:['tropical'],
           images:[
             'https://picsum.photos/500/300?image=18',
             'https://picsum.photos/500/300?image=15'
@@ -387,6 +469,7 @@ export default {
           race:'chepa',
           type:'chat',
           couleur:['gris'],
+          tag:[],
           images:['https://picsum.photos/500/300?image=15'],
           adopte:true
         },
@@ -397,6 +480,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['bleu','gris'],
+          tag:[],
           images:['https://picsum.photos/500/300?image=43'],
           adopte:false
         },
@@ -407,6 +491,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['brun'],
+          tag:[],
           images:['https://picsum.photos/500/300?image=78'],
           adopte:false
         },
@@ -417,6 +502,7 @@ export default {
           race:'chepa',
           type:'chien',
           couleur:['brun','gris'],
+          tag:[],
           images:['https://picsum.photos/500/300?image=105'],
           adopte:false
         }
@@ -426,6 +512,20 @@ export default {
     }
   },
   methods:{
+    ajouteTag:function (){
+      this.tags.push(this.searchTag)
+      this.animalCopy.tag.push(this.searchTag)
+      // TODO
+      // ajoute tag
+      this.searchTag=''
+    },
+    ajouteType:function (){
+      this.types.push(this.searchType)
+      this.animalCopy.type=this.searchType
+      // TODO
+      // ajoute type
+      this.searchType=''
+    },
     getAnimal:function (){
       this.animaux.forEach((animal)=>{
         if(animal.id==this.id){
@@ -440,6 +540,13 @@ export default {
         couleurs+=(c+', ')
       })
       return couleurs.slice(0, -2);
+    },
+    getTagsAnimal:function(){
+      let tags = ""
+      this.animal.tag.forEach((t)=>{
+        tags+=(t+', ')
+      })
+      return tags.slice(0, -2);
     },
     enregistrer:function(){
       if(this.animalCopy.type.length>0 && this.animalCopy.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animalCopy.nom)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)) && this.animalCopy.race.length>0 && (new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(this.animalCopy.race)) && this.animalCopy.couleur.length>0){

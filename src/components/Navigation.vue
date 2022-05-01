@@ -33,8 +33,10 @@
                 v-model="recherche"
                 hide-details="auto"
                 append-outer-icon="mdi-magnify"
+                append-icon="mdi-close"
                 @click:append-outer="search()"
-                clearable
+                @click:append="recherche='';search()"
+
             >
             </v-text-field>
           </v-col>
@@ -83,6 +85,8 @@
           <v-col class="col-auto">
             <v-menu
                 open-on-hover
+                :close-on-click="false"
+                :close-on-content-click="false"
                 bottom
                 offset-y
                 :disabled="tags.length===0"
@@ -102,10 +106,14 @@
                     v-for="(tag, index) in tags"
                     :key="index"
                 >
-                  <v-list-item-title>
+                  <v-list-item-action>
+                    <v-checkbox v-model="tag.checked">
+                      <template v-slot:label>
+                        <h5 style="color: black">{{tag.nom}}</h5>
+                      </template>
+                    </v-checkbox>
+                  </v-list-item-action>
 
-                    {{ tag.title }}
-                  </v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -140,7 +148,11 @@ export default {
         {nom:'couleur',checked:false},
         {nom:'âge',checked:false},
       ],
-      tags:[],
+      tags:[
+        {nom:'tropical',checked:false},
+        {nom:'origine continental',checked:false},
+        {nom:'exotique',checked:false},
+      ],
     }
   },
   computed:{
@@ -150,6 +162,11 @@ export default {
     ...mapMutations(['setUtilisateur']),
     search:function(){
       console.log(this.recherche)
+      if(this.recherche.length>0){
+        this.$router.push({name:'Carousel',params:{criteres:this.criteres.filter((critere)=>{return critere.checked}).map((critere)=>(critere.nom)),tags:this.tags.filter((tag)=>{return tag.checked}).map((tag)=>(tag.nom))},query:{search:this.recherche}})
+      }else{
+        this.$router.push({name:'Carousel',params:{criteres:this.criteres.filter((critere)=>{return critere.checked}).map((critere)=>(critere.nom)),tags:this.tags.filter((tag)=>{return tag.checked}).map((tag)=>(tag.nom))}})
+      }
       // TODO
       // fonction de recherche
     },
