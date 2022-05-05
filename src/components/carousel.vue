@@ -1,18 +1,15 @@
 <template>
   <div style="padding: 10px">
     <v-row>
-      {{tags}}
-      {{criteres}}
-      {{search.split(' ')}}
       <v-col
           v-for="(animal,idx) in animauxFiltre"
           :key="idx"
           class="d-flex child-flex"
           cols="4"
       >
-        <v-card @click="$router.push({name:'Animal',params:{id:animal.id}})">
+        <v-card @click="$router.push({name:'Animal',params:{id:animal.idAnimal}})">
           <v-img
-              :src="animal.images[0]"
+              :src="animal.images[0].lien"
               aspect-ratio="1"
               class="grey lighten-2"
           >
@@ -28,34 +25,34 @@
                 ></v-progress-circular>
               </v-row>
             </template>
-            <v-img v-if="animal.adopte" :src="svgadopte" width="30%"></v-img>
+            <v-img v-if="animal.adopter" :src="svgadopte" width="30%"></v-img>
           </v-img>
           <v-col style="margin: 0;padding:10px">
             <v-row style="margin: 0;padding:0">
-              Animal : {{animal.type}}
+              Animal : {{animal.idType}}
             </v-row>
             <v-row style="margin: 0;padding:0">
-              Nom : {{animal.nom}}
+              Nom : {{animal.nomAnimal}}
             </v-row>
             <v-row style="margin: 0;padding:0">
               Age : {{animal.age}} {{animal.age>1?'ans':'an'}}
             </v-row>
             <v-row style="margin: 0;padding:0">
-              Race : {{animal.race}}
+              Race : {{animal.idRace}}
             </v-row>
           </v-col>
         </v-card>
 
       </v-col>
     </v-row>
-    <v-btn v-if="getUtilisateur && getUtilisateur.role==='admin'" fab  style="position: fixed;right: 25px;bottom: 25px;" @click="$router.push({name:'Ajout'})">
+    <v-btn v-if="getUtilisateur && getUtilisateur.role==='Administrateur'" fab  style="position: fixed;right: 25px;bottom: 25px;" @click="$router.push({name:'Ajout'})">
       <v-icon large color="green lighten-2">
         mdi-plus
       </v-icon>
     </v-btn>
 
 
-    <v-dialog v-if="getUtilisateur && getUtilisateur.role!=='admin'"
+    <v-dialog v-if="getUtilisateur && getUtilisateur.role!=='Administrateur'"
               v-model="dialogAdopte"
               persistent
               max-width="650"
@@ -156,6 +153,7 @@
 <script>
 import * as svgadopte from '../assets/Adopté_Plan de travail 1.svg';
 import {mapGetters} from "vuex";
+import axios from "axios";
 export default {
   name: "carousel",
   data(){
@@ -183,66 +181,7 @@ export default {
         couleur:[],
       },
       animauxFiltre:[],
-      animaux:[
-        {
-          id:1,
-          nom:'chien1',
-          age:1,
-          race:'chepa',
-          type:'chien',
-          couleur:['vert','gris'],
-          tag:['tropical'],
-          images:[
-            'https://picsum.photos/500/300?image=18',
-            'https://picsum.photos/500/300?image=15'
-          ],
-          adopte:false
-        },
-        {
-          id:2,
-          nom:'chat2',
-          age:5,
-          race:'chepa',
-          type:'chat',
-          couleur:['gris'],
-          tag:[],
-          images:['https://picsum.photos/500/300?image=15'],
-          adopte:true
-        },
-        {
-          id:3,
-          nom:'chien3',
-          age:10,
-          race:'chepa',
-          type:'chien',
-          couleur:['bleu','gris'],
-          tag:[],
-          images:['https://picsum.photos/500/300?image=43'],
-          adopte:false
-        },
-        {
-          id:4,
-          nom:'chien4',
-          age:10,
-          race:'chepa',
-          type:'chien',
-          couleur:['brun'],
-          tag:['tropical'],
-          images:['https://picsum.photos/500/300?image=78'],
-          adopte:false
-        },
-        {
-          id:5,
-          nom:'chien5',
-          age:12,
-          race:'chepa',
-          type:'chien',
-          couleur:['brun','gris'],
-          tag:[],
-          images:['https://picsum.photos/500/300?image=105'],
-          adopte:false
-        }
-      ],
+      animaux:[],
       search:'',
       criteres:[],
       tags:[]
@@ -264,6 +203,22 @@ export default {
 
 
     },
+    getAnimaux(){
+      let listAnimaux = []
+      axios.get('http://127.0.0.1:8855/api/animaux')
+      .then(async (response) => {
+        let animaux = response.data
+        for (const animal of animaux) {
+          await axios.get('http://127.0.0.1:8855/api/image/animal/'+animal.idAnimal).then(res => {
+            animal['images'] = res.data
+          })
+          listAnimaux.push(animal)
+        }
+        this.animaux=listAnimaux
+        this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
+
+      })
+    },
     filtrage:function (animal){
       let resFiltre = false
       if(this.tags.length>0){
@@ -271,7 +226,6 @@ export default {
           if(animal.tag.length>0){
             animal.tag.forEach((atag)=>{
               if(tag===atag){
-                console.log(animal.id)
                 resFiltre = true
               }
             })
@@ -318,15 +272,16 @@ export default {
       return resFiltre && resCritere
     }
   },
-  created() {
+  async created() {
+    this.getAnimaux()
     this.$watch(
         () => this.$route.query,
         (toParams) => {
           let search = toParams.search
-          if(search){
-            this.search=search
+          if (search) {
+            this.search = search
           }
-          this.animauxFiltre=this.animaux.filter((animal) => this.filtrage(animal))
+          this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
 
         }
     )
@@ -334,31 +289,31 @@ export default {
         () => this.$route.params,
         (toParams) => {
           let criteres = toParams.criteres
-          if(criteres){
-            this.criteres=criteres
+          if (criteres) {
+            this.criteres = criteres
           }
           let tags = toParams.tags
-          if(tags){
-            this.tags=tags
+          if (tags) {
+            this.tags = tags
           }
-          this.animauxFiltre=this.animaux.filter((animal) => this.filtrage(animal))
+          this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
 
         }
     )
     let search = this.$route.query.search
-    if(search){
-      this.search=search
+    if (search) {
+      this.search = search
     }
     let criteres = this.$route.params.criteres
-    if(criteres){
-      this.criteres=criteres
+    if (criteres) {
+      this.criteres = criteres
     }
     let tags = this.$route.params.tags
-    if(tags){
-      this.tags=tags
+    if (tags) {
+      this.tags = tags
     }
 
-    this.animauxFiltre=this.animaux.filter((animal) => this.filtrage(animal))
+    this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
   }
 }
 </script>

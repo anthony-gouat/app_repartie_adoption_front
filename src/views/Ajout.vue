@@ -2,7 +2,6 @@
   <div>
     <v-row style="margin: 0;margin-top: 50px" justify="center">
       <v-card width="95%">
-
         <v-row>
           <v-col>
             <v-carousel v-if="animal.images.length>1" v-model="indexCarousel">
@@ -11,7 +10,7 @@
                   :key="i"
               >
                 <v-img
-                    :src="image"
+                    :src="image.lien"
                     class="grey lighten-2"
                 >
                   <template v-slot:placeholder>
@@ -30,8 +29,8 @@
                 </v-img>
               </v-carousel-item>
             </v-carousel>
-            <v-img v-else
-                   :src="animal.images[0]"
+            <v-img v-else-if="animal.images.length===1"
+                   :src="animal.images[0].lien"
                    class="grey lighten-2"
             >
               <template v-slot:placeholder>
@@ -57,11 +56,19 @@
               </v-row>
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-combobox
-                    v-model="animal.type"
-                    :items="types"
-                    :error-messages="(animal.type!=='')?'':'Veuillez choisir un type d\'animal'"
-
+                    :value="{text:animal.type,value:animal.idType}"
+                    @change="(val)=>{
+                    animal.type=val.text
+                    animal.idType=val.value
+                  }"
+                    :items="types.map(type=>{return {text:type.libelleType,value:type.idType}})"
+                    :search-input.sync="searchType"
                 >
+                  <template v-slot:no-data >
+                    <v-btn width="100%" color="transparent" elevation="0" @click="ajouteType()">
+                      Ajouter le type "<strong>{{ searchType }}</strong>"
+                    </v-btn>
+                  </template>
                 </v-combobox>
               </v-row>
             </div>
@@ -93,23 +100,37 @@
                 Race :
               </v-row>
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
-                <v-text-field
-                    v-model="animal.race"
-                    :error-messages="(new RegExp(/^[a-zA-Z\-]+( [a-zA-Z\-]+)*$/).test(animal.race))?'':'Veuillez choisir une race pour l\'animal'"
-                ></v-text-field>
+                <v-combobox
+                    :value="{text:animal.race,value:animal.idRace}"
+                    @change="(val)=>{
+                    animal.race=val.text
+                    animal.idRace=val.value
+                  }"
+                    :items="races.map(race=>{return {text:race.libelleRace,value:race.idRace}})"
+                    :search-input.sync="searchRace"
+                >
+                  <template v-slot:no-data >
+                    <v-btn width="100%" color="transparent" elevation="0" @click="ajouteRace()">
+                      Ajouter la race "<strong>{{ searchRace }}</strong>"
+                    </v-btn>
+                  </template>
+                </v-combobox>
               </v-row>
             </div>
 
             <div>
               <v-row style="margin: 0;padding:0;font-size: 12px;color: darkgrey" justify="center">
-                {{ animal.couleur.length>1?'Couleurs':'Couleur'}} :
+                {{ animal.couleurs.length>1?'Couleurs':'Couleur'}} :
               </v-row>
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-combobox
-                    v-model="animal.couleur"
-                    :items="couleurs"
+                    @change="(val)=>animal.couleurs=(val.map(v=>{
+                      return {idCouleur:v.value,libelleCouleur:v.text}
+                    }))"
+                    :value="animal.couleurs.map(couleur=>{return {text:couleur.libelleCouleur,value:couleur.idCouleur}})"
+                    :items="couleurs.map(couleur=>{return {text:couleur.libelleCouleur,value:couleur.idCouleur}})"
                     multiple
-                    :error-messages="(animal.couleur.length>0)?'':'Veuillez choisir une/des couleur(s) pour l\'animal'"
+                    :error-messages="(animal.couleurs.length>0)?'':'Veuillez choisir une/des couleur(s) pour l\'animal'"
                 ></v-combobox>
               </v-row>
             </div>
@@ -119,14 +140,12 @@
                 {{ animal.images.length>1?'Images':'Image'}} :
               </v-row>
               <v-row  style="margin: auto;padding:0;width: 50%;min-width: 100px">
-                <!--              <v-text-field-->
-                <!--                  v-model="animal.image"-->
-                <!--                  -->
-                <!--              ></v-text-field>-->
                 <v-combobox
-                    v-model="animal.images"
+                    @change="(val)=>(animal.images=val.map(v=>{
+                      return{lien:v,id_img:0}
+                    }))"
+                    :value="animal.images.map(image=>{return image.lien})"
                     multiple
-                    :error-messages="(animal.images.length>0)?'':'Veuillez choisir une image pour l\'animal (pas obligatoire)'"
                     chips
                 ></v-combobox>
               </v-row>
@@ -149,32 +168,25 @@
 
 <script>
 import {mapGetters} from "vuex";
+import axios from "axios";
 
 export default {
   name: "Ajout",
   data(){
     return{
+      searchRace:'',
+      searchTag:'',
+      searchType:'',
       indexCarousel:0,
-      types:[
-        "chat",
-        "chien",
-        "lapin",
-        "oiseau",
-      ],
-      couleurs:[
-        "vert",
-        "gris",
-        "bleu",
-        "brun",
-        "noir",
-        "blanc"
-      ],
+      races:[],
+      types:[],
+      couleurs:[],
       animal:{
         nom:'',
         age:0,
         race:'',
         type:'',
-        couleur:[],
+        couleurs:[],
         images:[],
         adopte:false
       },
@@ -190,11 +202,24 @@ export default {
         alert("Il y a une erreur")
       }
     },
-
+    getInfos:async function () {
+      axios.get('http://127.0.0.1:8855/api/race').then(response => {
+        this.races = response.data
+      })
+      axios.get('http://127.0.0.1:8855/api/type').then(response => {
+        this.types = response.data
+      })
+      axios.get('http://127.0.0.1:8855/api/couleur').then(response => {
+        this.couleurs = response.data
+      })
+    }
   },
   computed:{
     ...mapGetters(['getUtilisateur'])
   },
+  created() {
+    this.getInfos();
+  }
 }
 </script>
 

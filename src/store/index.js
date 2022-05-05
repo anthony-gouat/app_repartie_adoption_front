@@ -7,7 +7,7 @@ export default new Vuex.Store({
   state: {
     utilisateur:{
       id:1,
-      role:"admin"
+      role:"Administrateur"
     }
   },
   getters:{
