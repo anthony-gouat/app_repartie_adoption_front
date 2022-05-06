@@ -162,7 +162,6 @@
         </v-row>
       </v-card>
     </v-row>
-
   </div>
 </template>
 
@@ -193,11 +192,55 @@ export default {
     }
   },
   methods:{
+    ajouteType:function (){
+      this.types.push(this.searchType)
+      this.animalCopy.type=this.searchType
+      // TODO
+      // ajoute type
+      this.searchType=''
+    },
+    ajouteRace:function (){
+      this.types.push(this.searchRace)
+      this.animalCopy.race=this.searchRace
+      // TODO
+      // ajoute race
+      this.searchRace=''
+    },
     enregistrer:function(){
-      if(this.animal.type.length>0 && this.animal.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animal.nom)) && (new RegExp(/^[0-9]+$/).test(this.animal.age)) && this.animal.race.length>0 && (new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(this.animal.race)) && this.animal.couleur.length>0){
-        //TODO
-        // Enregistrer dans la bdd
-        // this.$router.push({name:'Carousel'})
+      if(this.animal.idType && this.animal.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animal.nom)) && (new RegExp(/^[0-9]+$/).test(this.animal.age)) && this.animal.idRace && this.animal.couleurs.length>0){
+        axios.post('http://127.0.0.1:8855/api/animaux',{
+          nomAnimal: this.animal.nom,
+          age: this.animal.age,
+          idRace: this.animal.idRace,
+          idType: this.animal.idType,
+          adopter: false
+        }).then(async response => {
+          let newAnimalId = response.data.idAnimal
+          for (const couleur of this.animal.couleurs) {
+            await axios.post('http://127.0.0.1:8855/api/couleurs', {
+              idAnimal: newAnimalId,
+              idCouleur: couleur.idCouleur
+            })
+          }
+          for (const image of this.animal.images) {
+            await axios.post('http://127.0.0.1:8855/api/image', {
+              lien:image.lien
+            })
+            .then(async res => {
+              let nawIdImage = res.data.id_img
+              await axios.post('http://127.0.0.1:8855/api/images', {
+                idImage: nawIdImage,
+                idAnimal: newAnimalId
+              })
+            })
+          }
+
+          this.$router.push({name: 'Carousel'})
+        })
+        .catch(error=>{
+          alert(error)
+        })
+
       }else{
         alert("Il y a une erreur")
       }

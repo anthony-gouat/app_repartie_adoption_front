@@ -467,9 +467,6 @@ export default {
     }
   },
   methods:{
-    test(val){
-      console.log(val)
-    },
     ajouteTag:function (){
       // TODO
       // ajoute tag
@@ -482,7 +479,6 @@ export default {
         this.tags.push(response.data)
         this.searchTag=''
       })
-
 
     },
     ajouteType:function (){
@@ -557,12 +553,53 @@ export default {
       return tags.slice(0, -2);
     },
     enregistrer:function(){
-      console.log(this.animalCopy.nomAnimal.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animalCopy.nomAnimal)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age)))
       if(this.animalCopy.nomAnimal.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animalCopy.nomAnimal)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age))){
         this.animal = Object.assign({}, this.animalCopy);
         //TODO
         // Enregistrer dans la bdd
+        axios.put('http://127.0.0.1:8855/api/animaux/'+this.id,{
+          nomAnimal: this.animal.nomAnimal,
+          age: this.animal.age,
+          idRace: this.animal.idRace,
+          idType: this.animal.idType,
+          adopter: this.animal.adopte
+        }).then(async () => {
+          let animalId = this.id
+          await axios.delete('http://127.0.0.1:8855/api/images/animal/'+animalId)
+          await axios.delete('http://127.0.0.1:8855/api/tags/animal/'+animalId)
+          await axios.delete('http://127.0.0.1:8855/api/couleurs/animal/'+animalId)
+          for (const couleur of this.animal.couleurs) {
+            await axios.post('http://127.0.0.1:8855/api/couleurs', {
+              idAnimal: animalId,
+              idCouleur: couleur.idCouleur
+            })
+          }
+          for (const tag of this.animal.tags) {
+            await axios.post('http://127.0.0.1:8855/api/tags', {
+              idAnimal: animalId,
+              idTag: tag.idTag
+            })
+          }
+          for (const image of this.animal.images) {
+            await axios.post('http://127.0.0.1:8855/api/image', {
+              lien:image.lien
+            })
+                .then(async res => {
+                  let nawIdImage = res.data.id_img
+                  await axios.post('http://127.0.0.1:8855/api/images', {
+                    idImage: nawIdImage,
+                    idAnimal: animalId
+                  })
+                })
+          }
+          await this.getInfos()
+          this.getAnimal()
+        })
+        .catch(error=>{
+          alert(error)
+        })
       }else{
+        alert("Il y a une erreur")
         this.animalCopy = Object.assign({}, this.animal);
       }
     },
