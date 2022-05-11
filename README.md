@@ -11,7 +11,7 @@ Ce projet a pour but d'être relié à une [API REST](https://github.com/anthony
 
 ## Installation
 
-1 Clonner le projet : git clone https://github.com/anthony-gouat/app_repartie_adoption_back.git
+1 Clonner le projet : git clone https://github.com/anthony-gouat/app_repartie_adoption_front.git
 
 2 Se rendre dans le projet : cd app_repartie_adoption_front
 

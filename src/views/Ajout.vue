@@ -56,11 +56,11 @@
               </v-row>
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-combobox
-                    :value="{text:animal.type,value:animal.idType}"
+                    :value="animal.type"
                     @change="(val)=>{
-                    animal.type=val.text
-                    animal.idType=val.value
-                  }"
+                      animal.type=val.text
+                      animal.idType=val.value
+                    }"
                     :items="types.map(type=>{return {text:type.libelleType,value:type.idType}})"
                     :search-input.sync="searchType"
                 >
@@ -101,11 +101,11 @@
               </v-row>
               <v-row style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-combobox
-                    :value="{text:animal.race,value:animal.idRace}"
+                    :value="animal.race"
                     @change="(val)=>{
-                    animal.race=val.text
-                    animal.idRace=val.value
-                  }"
+                      animal.race=val.text
+                      animal.idRace=val.value
+                    }"
                     :items="races.map(race=>{return {text:race.libelleRace,value:race.idRace}})"
                     :search-input.sync="searchRace"
                 >
@@ -183,28 +183,40 @@ export default {
       animal:{
         nom:'',
         age:0,
+        idRace:0,
+        idType:0,
         race:'',
         type:'',
         couleurs:[],
         images:[],
-        adopte:false
+        adopter:false
       },
     }
   },
   methods:{
     ajouteType:function (){
-      this.types.push(this.searchType)
-      this.animalCopy.type=this.searchType
-      // TODO
-      // ajoute type
-      this.searchType=''
+      axios.post('http://127.0.0.1:8855/api/type',
+          {
+            libelleType:this.searchType
+          })
+          .then(response=>{
+            this.animal.type=response.data.libelleType
+            this.animal.idType=response.data.idType
+            this.types.push(response.data)
+            this.searchType=''
+          })
     },
     ajouteRace:function (){
-      this.types.push(this.searchRace)
-      this.animalCopy.race=this.searchRace
-      // TODO
-      // ajoute race
-      this.searchRace=''
+      axios.post('http://127.0.0.1:8855/api/race',
+          {
+            libelleRace:this.searchRace
+          })
+          .then(response=>{
+            this.animal.race=response.data.libelleRace
+            this.animal.idRace=response.data.idRace
+            this.races.push(response.data)
+            this.searchRace=''
+          })
     },
     enregistrer:function(){
       if(this.animal.idType && this.animal.nom.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animal.nom)) && (new RegExp(/^[0-9]+$/).test(this.animal.age)) && this.animal.idRace && this.animal.couleurs.length>0){

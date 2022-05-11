@@ -26,7 +26,7 @@
                       ></v-progress-circular>
                     </v-row>
                   </template>
-                  <v-img v-if="animalCopy.adopte" :src="svgadopte" width="30%"></v-img>
+                  <v-img v-if="animalCopy.adopter" :src="svgadopte" width="30%"></v-img>
                 </v-img>
               </v-carousel-item>
             </v-carousel>
@@ -47,7 +47,7 @@
                   ></v-progress-circular>
                 </v-row>
               </template>
-              <v-img v-if="animalCopy.adopte" :src="svgadopte" width="30%"></v-img>
+              <v-img v-if="animalCopy.adopter" :src="svgadopte" width="30%"></v-img>
             </v-img>
           </v-col>
 
@@ -119,10 +119,6 @@
                 {{animal.race}}
               </v-row>
               <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
-<!--                <v-text-field-->
-<!--                    v-model="animalCopy.race"-->
-<!--                    :error-messages="(new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(animalCopy.race))?'':'Veuillez choisir une race pour l\'animal'"-->
-<!--                ></v-text-field>-->
                 <v-combobox
                     :value="animalCopy.race"
                     @change="(val)=>{
@@ -210,7 +206,7 @@
               </v-row>
               <v-row style="margin: 0;padding:0;" justify="center">
                 <v-checkbox
-                  v-model="animalCopy.adopte"
+                  v-model="animalCopy.adopter"
                 >
                 </v-checkbox>
               </v-row>
@@ -226,7 +222,7 @@
           </v-col>
         </v-row>
 
-        <v-card-actions v-if="!animal.adopte">
+        <v-card-actions v-if="!animal.adopter">
           <v-row style="padding: 0;margin: 0;position: absolute;right: 10px;bottom: 10px" >
   <!--          Adoption d'un animal                  -->
             <v-btn color="green lighten-2" v-if="!getUtilisateur" @click="$router.push({name:'Login',params:{topath:{name:'Animal',params:{id:animal.id}}}})">
@@ -578,14 +574,12 @@ export default {
     enregistrer:function(){
       if(this.animalCopy.nomAnimal.length>0 && (new RegExp(/^[a-zA-Z\-0-9]+( [a-zA-Z\-0-9]+)*$/).test(this.animalCopy.nomAnimal)) && (new RegExp(/^[0-9]+$/).test(this.animalCopy.age))){
         this.animal = Object.assign({}, this.animalCopy);
-        //TODO
-        // Enregistrer dans la bdd
         axios.put('http://127.0.0.1:8855/api/animaux/'+this.id,{
           nomAnimal: this.animal.nomAnimal,
           age: this.animal.age,
           idRace: this.animal.idRace,
           idType: this.animal.idType,
-          adopter: this.animal.adopte
+          adopter: this.animal.adopter
         }).then(async () => {
           let animalId = this.id
           await axios.delete('http://127.0.0.1:8855/api/images/animal/'+animalId)
@@ -603,6 +597,7 @@ export default {
               idTag: tag.idTag
             })
           }
+
           for (const image of this.animal.images) {
             await axios.post('http://127.0.0.1:8855/api/image', {
               lien:image.lien

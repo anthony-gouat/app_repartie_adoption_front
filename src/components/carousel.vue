@@ -9,7 +9,28 @@
       >
         <v-card @click="$router.push({name:'Animal',params:{id:animal.idAnimal}})">
           <v-img
+              v-if="animal.images[0]"
               :src="animal.images[0].lien"
+              aspect-ratio="1"
+              class="grey lighten-2"
+          >
+            <template v-slot:placeholder>
+              <v-row
+                  class="fill-height ma-0"
+                  align="center"
+                  justify="center"
+              >
+                <v-progress-circular
+                    indeterminate
+                    color="grey lighten-5"
+                ></v-progress-circular>
+              </v-row>
+            </template>
+            <v-img v-if="animal.adopter" :src="svgadopte" width="30%"></v-img>
+          </v-img>
+          <v-img
+              v-else
+              src="#"
               aspect-ratio="1"
               class="grey lighten-2"
           >
