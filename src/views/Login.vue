@@ -87,9 +87,9 @@ export default {
     login:function() {
       let v = this
       // post sur l'adresse de l'API d'authentification
-      axios.post('', {
-            Identifiant: this.loginForm.login,
-            MotDePasse: this.loginForm.mdp
+      axios.post('http://127.0.0.1:8855/api/utilisateur/authentification', {
+            mail: this.loginForm.login,
+            mdp: this.loginForm.mdp
           }
       )
           .then(function (response) {

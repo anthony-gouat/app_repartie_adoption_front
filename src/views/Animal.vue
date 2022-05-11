@@ -1,6 +1,5 @@
 <template>
   <div>
-    {{animalCopy}}
     <v-row style="margin: 0;margin-top: 50px" justify="center">
       <v-card width="95%">
         <v-row >
@@ -67,10 +66,10 @@
               </v-row>
               <v-row v-else style="margin: auto;padding:0;width: 25%;min-width: 100px">
                 <v-combobox
-                  :value="{text:animalCopy.type,value:animalCopy.idType}"
+                  :value="animalCopy.type"
                   @change="(val)=>{
-                    animalCopy.type=val.text
-                    animalCopy.idType=val.value
+                      animalCopy.type=val.text
+                      animalCopy.idType=val.value
                   }"
                   :items="types.map(type=>{return {text:type.libelleType,value:type.idType}})"
                   :search-input.sync="searchType"
@@ -125,7 +124,7 @@
 <!--                    :error-messages="(new RegExp(/^[a-zA-Z-]+( [a-zA-Z-]+)*$/).test(animalCopy.race))?'':'Veuillez choisir une race pour l\'animal'"-->
 <!--                ></v-text-field>-->
                 <v-combobox
-                    :value="{text:animalCopy.race,value:animalCopy.idRace}"
+                    :value="animalCopy.race"
                     @change="(val)=>{
                     animalCopy.race=val.text
                     animalCopy.idRace=val.value
@@ -292,13 +291,13 @@
         <v-row style="margin: 0;padding: 0">
           <v-card width="47.5%">
             <v-card-title>
-              {{comm.id_util}}
+              {{comm.idUtil}}
             </v-card-title>
             <v-card-text>
-              {{comm.contenu}}
+              {{comm.contenuComm}}
             </v-card-text>
-            <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='Administrateur' || getUtilisateur.id === comm.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
-              <v-btn elevation="0" @click="deleteComm(comm.id)">
+            <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='Administrateur' || getUtilisateur.idUtil === comm.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
+              <v-btn elevation="0" @click="deleteComm(comm.idCommentaire)">
                 <v-icon color="green lighten-2" >
                   mdi-close
                 </v-icon>
@@ -321,7 +320,7 @@
                   </template>
                   <v-card>
                     <v-card-title class="text-h5">
-                      écrire une réponse {{comm.id}}
+                      écrire une réponse {{comm.idCommentaire}}
                     </v-card-title>
                     <v-card-text>
                       <v-textarea
@@ -342,7 +341,7 @@
                       <v-btn
                           color="green darken-1"
                           text
-                          @click="addRep(comm.id);reponse='';comm.ecritRep = false;"
+                          @click="addRep(comm.idCommentaire);reponse='';comm.ecritRep = false;"
                       >
                         Ok
                       </v-btn>
@@ -356,13 +355,13 @@
         <v-row v-if="comm.reponse" style="margin: 0;margin-right: 2.5%;margin-left: 50%">
           <v-card width="100%">
             <v-card-title>
-              {{comm.reponse.id_util}}
+              {{comm.reponse.idUtil}}
             </v-card-title>
             <v-card-text>
-              {{comm.reponse.contenu}}
+              {{comm.reponse.contenuComm}}
             </v-card-text>
-            <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='Administrateur' || getUtilisateur.id === comm.reponse.id_util)" style="position: inherit;width: fit-content;margin-left: auto;">
-              <v-btn elevation="0" @click="deleteComm(comm.reponse.id)">
+            <v-card-actions v-if="getUtilisateur && (getUtilisateur.role==='Administrateur' || getUtilisateur.idUtil === comm.reponse.idUtil)" style="position: inherit;width: fit-content;margin-left: auto;">
+              <v-btn elevation="0" @click="deleteComm(comm.idReponse)">
                 <v-icon color="green lighten-2">
                   mdi-close
                 </v-icon>
@@ -428,6 +427,7 @@
 import * as svgadopte from '../assets/Adopté_Plan de travail 1.svg';
 import {mapGetters} from "vuex";
 import axios from "axios";
+import moment from "moment";
 
 export default {
   name: "Animal",
@@ -449,27 +449,13 @@ export default {
       types:[],
       couleurs:[],
       tags:[],
-      commentaires:[
-        {
-          id:1,
-          id_util:2,
-          reponse:{
-            id:2,
-            id_util:1,
-            contenu:'Ma réponse',
-          },
-          contenu:'Commentaire',
-          ecritRep:false,
-        }
-      ],
+      commentaires:[],
       animal:null,
       animalCopy:null,
     }
   },
   methods:{
     ajouteTag:function (){
-      // TODO
-      // ajoute tag
       axios.post('http://127.0.0.1:8855/api/tag',
           {
             libTag:this.searchTag
@@ -482,18 +468,28 @@ export default {
 
     },
     ajouteType:function (){
-      this.types.push(this.searchType)
-      this.animalCopy.type=this.searchType
-      // TODO
-      // ajoute type
-      this.searchType=''
+      axios.post('http://127.0.0.1:8855/api/type',
+          {
+            libelleType:this.searchType
+          })
+          .then(response=>{
+            this.animalCopy.type=response.data.libelleType
+            this.animalCopy.idType=response.data.idType
+            this.types.push(response.data)
+            this.searchType=''
+          })
     },
     ajouteRace:function (){
-      this.types.push(this.searchRace)
-      this.animalCopy.race=this.searchRace
-      // TODO
-      // ajoute race
-      this.searchRace=''
+      axios.post('http://127.0.0.1:8855/api/race',
+          {
+            libelleRace:this.searchRace
+          })
+          .then(response=>{
+            this.animalCopy.race=response.data.libelleRace
+            this.animalCopy.idRace=response.data.idRace
+            this.races.push(response.data)
+            this.searchRace=''
+          })
     },
     getAnimal:function (){
       axios.get('http://127.0.0.1:8855/api/animaux/'+this.id)
@@ -536,6 +532,33 @@ export default {
       })
       axios.get('http://127.0.0.1:8855/api/tag').then(response=>{
         this.tags = response.data
+      })
+      this.getCommentaires();
+    },
+    getCommentaires: function (){
+      axios.get('http://127.0.0.1:8855/api/commentaires/animal/'+this.id).then(response=>{
+        let coms = response.data
+        let copycoms = [...coms]
+        let res = []
+        coms.forEach(commentaire=>{
+          if (commentaire.idReponse!==null){
+            commentaire["reponse"]=null
+            copycoms.splice(copycoms.findIndex(function(o){
+              return o.idCommentaire === commentaire.idCommentaire;
+            }),1)
+            res.push(commentaire)
+          }
+        })
+        res.forEach(commentaire=>{
+          let idx = copycoms.findIndex(function(o){
+            return o.idCommentaire === commentaire.idReponse;
+          })
+          commentaire["reponse"]=copycoms[idx]
+          copycoms.splice(idx,1)
+
+        })
+        res.push(...copycoms)
+        this.commentaires=res
       })
     },
     getCouleursAnimal:function(){
@@ -608,50 +631,73 @@ export default {
       this.animalCopy = Object.assign({}, this.animal);
     },
     addComm:function(){
-      let id = this.commentaires.length*2+10
-      this.commentaires.push(
-        {
-          id:id,
-          id_util:this.getUtilisateur.id,
-          reponse:null,
-          contenu:this.commentaire,
-          ecritRep:false,
-        }
+      let context = this
+      axios.post('http://127.0.0.1:8855/api/commentaires',{
+        idUtil: this.getUtilisateur.idUtil,
+        contenuComm: this.commentaire,
+        date: new moment(),
+        idReponse: null
+      }).then((res)=>
+          {
+            axios.post('http://127.0.0.1:8855/api/commenter',{
+              idCommentaire: res.data.idCommentaire,
+              idAnimal: context.id
+            }).then(()=>context.getCommentaires())
+          }
       )
     },
     addRep:function(idcomm){
-      this.commentaires.forEach((comm)=>{
-        if(comm.id===idcomm){
-          comm.reponse={
-            id:comm.id+1,
-            id_util:this.getUtilisateur.id,
-            contenu:this.reponse,
-          }
-        }
+      let context = this
+      axios.post('http://127.0.0.1:8855/api/commentaires',{
+        idUtil: this.getUtilisateur.idUtil,
+        contenuComm: this.reponse,
+        date: new moment(),
+        idReponse: null
+      }).then((res)=>{
+        axios.put('http://127.0.0.1:8855/api/commentaires/'+idcomm,{
+          idReponse: res.data.idCommentaire
+        }).then(()=>{
+          axios.post('http://127.0.0.1:8855/api/commenter',{
+            idCommentaire: res.data.idCommentaire,
+            idAnimal: context.id
+          }).then(()=>context.getCommentaires())
+        })
       })
     },
-    deleteComm:function(idcomm){
-      let index=-1
-      this.commentaires.forEach((comm,i)=>{
-        if(comm.id===idcomm){
-          if(comm.reponse!==null){
-            comm.reponse=null
-            // TODO
-            // delete avec api
-          }
-          index=i
-          // TODO
-          // delete avec api
+    deleteComm:async function (idcomm) {
+      let idDel = idcomm
+      let context = this
+      for (const comm of this.commentaires) {
+        if (comm.idReponse !== null && comm.idReponse === idDel) {
+          console.log("1")
+          await axios.delete("http://127.0.0.1:8855/api/commenter/"+idDel+"/"+context.id).then(async () => {
+            await axios.put('http://127.0.0.1:8855/api/commentaires/' + comm.idCommentaire, {
+              idReponse: null
+            }).then(() => {
+              context.getCommentaires()
+              idDel = 0
+            })
+          })
         }
-        if(comm.reponse!== null && comm.reponse.id===idcomm) {
-          // TODO
-          // delete avec api
-          comm.reponse=null
-        }
-      })
-      if(index>-1){
-        this.commentaires.splice(index, 1);
       }
+
+      if(idDel!==0){
+        for (const comm of this.commentaires) {
+          if (comm.idCommentaire === idDel) {
+            if (comm.idReponse !== null) {
+              console.log("2")
+              await axios.delete("http://127.0.0.1:8855/api/commenter/" + comm.idReponse + "/" + context.id).then(() => context.getCommentaires())
+            }
+            console.log("3")
+            await axios.delete("http://127.0.0.1:8855/api/commenter/" + idDel + "/" + context.id).then(() => {
+              axios.delete("http://127.0.0.1:8855/api/commentaires/" + idDel).then(()=> {
+                context.getCommentaires()
+              })
+            })
+          }
+        }
+      }
+
     }
   },
   computed:{
