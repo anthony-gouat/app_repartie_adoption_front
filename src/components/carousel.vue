@@ -50,7 +50,7 @@
           </v-img>
           <v-col style="margin: 0;padding:10px">
             <v-row style="margin: 0;padding:0">
-              Animal : {{animal.idType}}
+              Animal : {{animal.type}}
             </v-row>
             <v-row style="margin: 0;padding:0">
               Nom : {{animal.nomAnimal}}
@@ -59,7 +59,7 @@
               Age : {{animal.age}} {{animal.age>1?'ans':'an'}}
             </v-row>
             <v-row style="margin: 0;padding:0">
-              Race : {{animal.idRace}}
+              Race : {{animal.race}}
             </v-row>
           </v-col>
         </v-card>
@@ -181,20 +181,9 @@ export default {
     return{
       svgadopte:svgadopte,
       dialogAdopte:false,
-      types:[
-        "chat",
-        "chien",
-        "lapin",
-        "oiseau",
-      ],
-      couleurs:[
-        "vert",
-        "gris",
-        "bleu",
-        "brun",
-        "noir",
-        "blanc"
-      ],
+      types:[],
+      races:[],
+      couleurs:[],
       animalAdopte:{
         age:0,
         race:'',
@@ -209,7 +198,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['getUtilisateur']),
+    ...mapGetters(['getUtilisateur','getRechercheCarousel','getTagsRecherche','getCriteresRecherche']),
   },
   methods:{
     demandeAdoption:function(){
@@ -221,8 +210,14 @@ export default {
       this.animalAdopte.race=''
       this.animalAdopte.type=''
       this.animalAdopte.couleur=[]
-
-
+    },
+    getInfos:async function (){
+      axios.get('http://127.0.0.1:8855/api/race').then(response=>{
+        this.races = response.data
+      })
+      axios.get('http://127.0.0.1:8855/api/type').then(response=>{
+        this.types = response.data
+      })
     },
     getAnimaux(){
       let listAnimaux = []
@@ -233,108 +228,124 @@ export default {
           await axios.get('http://127.0.0.1:8855/api/image/animal/'+animal.idAnimal).then(res => {
             animal['images'] = res.data
           })
+          await axios.get('http://127.0.0.1:8855/api/tag/animal/'+animal.idAnimal).then(res => {
+            animal['tags'] = res.data
+          })
+          this.types.forEach(type=>{
+            if(type.idType===animal.idType){
+              animal['type'] = type.libelleType
+            }
+          })
+          this.races.forEach(race=>{
+            if(race.idRace===animal.idRace){
+              animal['race'] = race.libelleRace
+            }
+          })
           listAnimaux.push(animal)
         }
         this.animaux=listAnimaux
-        this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
+        // this.animauxFiltre=this.animaux
+        this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal)).sort((a,b)=>this.customSort(a,b))
 
       })
     },
     filtrage:function (animal){
       let resFiltre = false
-      if(this.tags.length>0){
-        this.tags.forEach((tag)=>{
-          if(animal.tag.length>0){
-            animal.tag.forEach((atag)=>{
-              if(tag===atag){
-                resFiltre = true
-              }
-            })
-          }
-        })
-      }else{
-        resFiltre = true
-      }
 
-      let resCritere = false
-      if(this.criteres.length>0){
-        this.criteres.forEach((critere)=>{
-          this.search.split(' ').forEach((s)=>{
-            switch (critere){
-              case "race": if(new RegExp(s).test(animal.race)) {
-                resCritere = true
-              }
-                break;
-              case "type d'animal":if(new RegExp(s).test(animal.type)) {
-                resCritere = true
-              }
-                break;
-              case "couleur":  if(new RegExp(s).test(animal.couleur)) {
-                resCritere = true
-              }
-                break;
-              case "âge":  if(new RegExp(s).test(animal.age)) {
-                resCritere = true
-              }
-                break;
+      if(this.tags.length>0) {
+        let tags = this.tags.filter(tag => tag.checked)
+        if (tags.length > 0) {
+          tags.forEach((tag) => {
+            if (animal.tags.length > 0) {
+              animal.tags.forEach((atag) => {
+                if (tag.nom === atag.libTag) {
+                  resFiltre = true
+                }
+              })
             }
           })
-        })
-      }else{
-        this.search.split(' ').forEach((s)=>{
-          if( (new RegExp(s).test(animal.race)) || (new RegExp(s).test(animal.type)) || (new RegExp(s).test(animal.couleur)) || (new RegExp(s).test(animal.age)) ){
-            resCritere = true
-          }
-        })
+        } else {
+          resFiltre = true
+        }
+      }else {
+        resFiltre = true
       }
       if(this.search.length===0){
         return resFiltre
       }
-      return resFiltre && resCritere
+      return resFiltre
+    },
+    customSort:function(animalA,animalB){
+      if(this.search.length===0)return 0;
+      console.log(animalA);
+      console.log(animalB);
+      let scores = [0,0];
+      [animalA,animalB].forEach((animal,idx)=>{
+        if(this.criteres.length>0){
+          let criteres = this.criteres.filter(critere => critere.checked)
+          if(criteres.length>0){
+            criteres.forEach((critere)=>{
+              this.search.split(' ').forEach((s)=>{
+                switch (critere.nom){
+                  case "race": if(new RegExp(s).test(animal.race)) {
+                    scores[idx]+=1;
+                  }
+                    break;
+                  case "type d'animal":if(new RegExp(s).test(animal.type)) {
+                    scores[idx]+=1;
+                  }
+                    break;
+                  case "âge":  if(new RegExp(s).test(animal.age)) {
+                    scores[idx]+=1;
+                  }
+                    break;
+                }
+              })
+            })
+          }else {
+            this.search.split(' ').forEach((s)=>{
+              if( (new RegExp(s).test(animal.race)) || (new RegExp(s).test(animal.type)) || (new RegExp(s).test(animal.age)) ){
+                scores[idx]+=1;
+              }
+            })
+          }
+        }else {
+          return 0
+        }
+      })
+      return -(scores[0]-scores[1])%2
+    }
+  },
+  watch:{
+    tags: {
+      handler() {
+        this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
+      },
+      deep: true
+    },
+    criteres: {
+      handler() {
+        this.animauxFiltre.sort((a,b)=>this.customSort(a,b))
+      },
+      deep: true
+    },
+    getTagsRecherche(newVal){
+      this.tags=newVal
+    },
+    getCriteresRecherche(newVal){
+      this.criteres=newVal
+    },
+    getRechercheCarousel(newVal){
+      this.search=newVal
+      this.animauxFiltre.sort((a,b)=>this.customSort(a,b))
     }
   },
   async created() {
-    this.getAnimaux()
-    this.$watch(
-        () => this.$route.query,
-        (toParams) => {
-          let search = toParams.search
-          if (search) {
-            this.search = search
-          }
-          this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
-
-        }
-    )
-    this.$watch(
-        () => this.$route.params,
-        (toParams) => {
-          let criteres = toParams.criteres
-          if (criteres) {
-            this.criteres = criteres
-          }
-          let tags = toParams.tags
-          if (tags) {
-            this.tags = tags
-          }
-          this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
-
-        }
-    )
-    let search = this.$route.query.search
-    if (search) {
-      this.search = search
-    }
-    let criteres = this.$route.params.criteres
-    if (criteres) {
-      this.criteres = criteres
-    }
-    let tags = this.$route.params.tags
-    if (tags) {
-      this.tags = tags
-    }
-
-    this.animauxFiltre = this.animaux.filter((animal) => this.filtrage(animal))
+    await this.getInfos();
+    this.tags=this.getTagsRecherche;
+    this.criteres=this.getCriteresRecherche;
+    this.search=this.getRechercheCarousel;
+    this.getAnimaux();
   }
 }
 </script>

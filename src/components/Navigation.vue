@@ -136,6 +136,7 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
+import axios from "axios";
 
 export default {
   name: "Navigation",
@@ -145,35 +146,38 @@ export default {
       criteres:[
         {nom:'race',checked:false},
         {nom:'type d\'animal',checked:false},
-        {nom:'couleur',checked:false},
         {nom:'âge',checked:false},
       ],
-      tags:[
-        {nom:'tropical',checked:false},
-        {nom:'origine continental',checked:false},
-        {nom:'exotique',checked:false},
-      ],
+      tags:[],
     }
   },
   computed:{
     ...mapGetters(['getUtilisateur']),
   },
   methods: {
-    ...mapMutations(['setUtilisateur']),
+    ...mapMutations(['setUtilisateur','setRechercheCarousel','setTagsRecherche','setCriteresRecherche']),
     search:function(){
-      console.log(this.recherche)
-      if(this.recherche.length>0){
-        this.$router.push({name:'Carousel',params:{criteres:this.criteres.filter((critere)=>{return critere.checked}).map((critere)=>(critere.nom)),tags:this.tags.filter((tag)=>{return tag.checked}).map((tag)=>(tag.nom))},query:{search:this.recherche}})
-      }else{
-        this.$router.push({name:'Carousel',params:{criteres:this.criteres.filter((critere)=>{return critere.checked}).map((critere)=>(critere.nom)),tags:this.tags.filter((tag)=>{return tag.checked}).map((tag)=>(tag.nom))}})
+      this.setRechercheCarousel(this.recherche)
+      if(this.$router.currentRoute.name!=='Carousel'){
+        this.$router.push({name:'Carousel'})
       }
-      // TODO
-      // fonction de recherche
     },
     logout:function(){
       this.setUtilisateur(undefined)
       this.$router.push({name:'Carousel'})
     }
+  },
+  async created() {
+    await axios.get('http://127.0.0.1:8855/api/tag').then(response => {
+      this.tags = response.data.map(tag=> {
+        return {
+          nom: tag.libTag,
+          checked:false
+        }
+      })
+    })
+    this.setTagsRecherche(this.tags)
+    this.setCriteresRecherche(this.criteres)
   }
 }
 </script>
